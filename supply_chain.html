@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Control Tower</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header-subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .admin-link {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .admin-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .process-card {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .process-card:nth-child(1) { animation-delay: 0s; }
+        .process-card:nth-child(2) { animation-delay: 0.05s; }
+        .process-card:nth-child(3) { animation-delay: 0.1s; }
+        .process-card:nth-child(4) { animation-delay: 0.15s; }
+        .process-card:nth-child(5) { animation-delay: 0.2s; }
+        .process-card:nth-child(6) { animation-delay: 0.25s; }
+        .process-card:nth-child(7) { animation-delay: 0.3s; }
+        .process-card:nth-child(8) { animation-delay: 0.35s; }
+
+        .back-button {
+            animation: slideInLeft 0.3s ease-out;
+        }
+
+        .current-level-header {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .breadcrumb {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .stat-card.red {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .location-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .location-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .location-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .location-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .location-marker.green {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .location-marker.red {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+        }
+
+        .location-info {
+            flex: 1;
+        }
+
+        .location-name {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .location-coords {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .location-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .location-status.green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .location-status.red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+
+        /* Navigation */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .breadcrumb-item:hover {
+            color: #5a67d8;
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
+            color: #2d3748;
+            cursor: default;
+        }
+
+        .breadcrumb-item.active:hover {
+            text-decoration: none;
+        }
+
+        .breadcrumb-separator {
+            color: #cbd5e1;
+            font-weight: bold;
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .back-button:hover {
+            background: #475569;
+            transform: translateX(-2px);
+        }
+
+        .current-level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+            border-radius: 10px;
+        }
+
+        .current-level-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .logic-gate-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .logic-gate-badge.and {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .logic-gate-badge.or {
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+
+        /* Process List */
+        .process-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .process-card {
+            padding: 25px 30px;
+            border-radius: 12px;
+            border: 3px solid;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .process-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .process-card-content {
+            flex: 1;
+        }
+
+        .process-card.green {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+        }
+
+        .process-card.red {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #ef4444;
+        }
+
+        .process-card.propagated {
+            opacity: 0.85;
+        }
+
+        .process-card-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .process-card.green .process-card-name {
+            color: #065f46;
+        }
+
+        .process-card.red .process-card-name {
+            color: #991b1b;
+        }
+
+        .process-card-info {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .process-card-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .process-card.green .process-card-badge {
+            background: #065f46;
+            color: #d1fae5;
+        }
+
+        .process-card.red .process-card-badge {
+            background: #991b1b;
+            color: #fee2e2;
+        }
+
+        .has-children-indicator {
+            font-size: 28px;
+            opacity: 0.6;
+            margin-left: 20px;
+        }
+
+        .legend {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .alert-item {
+            padding: 12px;
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .alert-title {
+            font-weight: bold;
+            color: #991b1b;
+            margin-bottom: 5px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #7f1d1d;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .refresh-btn:hover {
+            background: #5a67d8;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="header-content">
+                <h1>Supply Chain Control Tower</h1>
+                <div class="header-subtitle">Real-time monitoring and analytics</div>
+            </div>
+            <a href="admin.html" class="admin-link">Admin Panel</a>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Column: Locations and Process Flow -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Facility Locations</div>
+                    </div>
+                    <div class="location-list" id="locationList"></div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <div class="card-title">Supply Chain Process Flow</div>
+                        <button class="refresh-btn" onclick="refreshAll()">Refresh</button>
+                    </div>
+                    
+                    <div class="legend">
+                        <div class="legend-title">How to Navigate:</div>
+                        <span class="legend-item">Click a process to drill down into its children</span>
+                        <span class="legend-item">⬅Use Back button to go up</span>
+                        <span class="legend-item">AND = Any child red → parent red</span>
+                        <span class="legend-item">OR = All children red → parent red</span>
+                    </div>
+
+                    <div id="navigationArea"></div>
+                    <div id="processView"></div>
+                </div>
+            </div>
+
+            <!-- Right Column: Stats and Analytics -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📊 Key Metrics</div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card green" id="healthyCount">
+                            <div class="stat-label">Healthy Processes</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card red" id="alertCount">
+                            <div class="stat-label">Active Alerts</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card" id="totalCount">
+                            <div class="stat-label">Total Processes</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card" id="efficiency">
+                            <div class="stat-label">System Health</div>
+                            <div class="stat-value">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <div class="card-title">📈 Status Distribution</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <div class="card-title">⚠️ Recent Alerts</div>
+                    </div>
+                    <div id="alerts"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <script>
+        let processData = localStorage.getItem('supplyChainData') 
+            ? JSON.parse(localStorage.getItem('supplyChainData'))
+            : {
+                tier0: [
+                    {
+                        id: 'mixing',
+                        name: 'Mixing',
+                        color: 'green',
+                        location: { lat: 33.7490, lng: -84.3880 },
+                        gateType: 'or',
+                        children: [
+                            { id: 'raw-material-prep', name: 'Raw Material Prep', color: 'green' },
+                            { id: 'blending', name: 'Blending', color: 'green' },
+                            { id: 'quality-check-1', name: 'Quality Check', color: 'red' }
+                        ]
+                    },
+                    {
+                        id: 'forming',
+                        name: 'Forming',
+                        color: 'green',
+                        location: { lat: 33.7590, lng: -84.3980 },
+                        gateType: 'and',
+                        children: [
+                            { id: 'molding', name: 'Molding', color: 'green' },
+                            { id: 'cutting', name: 'Cutting', color: 'green' },
+                            { id: 'shaping', name: 'Shaping', color: 'green' }
+                        ]
+                    },
+                    {
+                        id: 'pressing',
+                        name: 'Pressing',
+                        color: 'green',
+                        location: { lat: 33.7690, lng: -84.4080 },
+                        gateType: 'or',
+                        children: [
+                            { id: 'pre-heat', name: 'Pre-Heat', color: 'green' },
+                            { id: 'compression', name: 'Compression', color: 'red' },
+                            { id: 'cooling', name: 'Cooling', color: 'green' }
+                        ]
+                    },
+                    {
+                        id: 'rolling',
+                        name: 'Rolling',
+                        color: 'red',
+                        location: { lat: 33.7390, lng: -84.3780 },
+                        gateType: 'and',
+                        children: [
+                            {
+                                id: 'hot-rolling',
+                                name: 'Hot Rolling',
+                                color: 'red',
+                                gateType: 'or',
+                                children: [
+                                    { id: 'furnace-heating', name: 'Furnace Heating', color: 'red' },
+                                    { id: 'roughing-mill', name: 'Roughing Mill', color: 'green' },
+                                    { id: 'finishing-mill', name: 'Finishing Mill', color: 'green' }
+                                ]
+                            },
+                            {
+                                id: 'pickling',
+                                name: 'Pickling',
+                                color: 'green',
+                                gateType: 'and',
+                                children: [
+                                    { id: 'acid-bath', name: 'Acid Bath', color: 'green' },
+                                    { id: 'rinsing', name: 'Rinsing', color: 'green' },
+                                    { id: 'drying', name: 'Drying', color: 'green' }
+                                ]
+                            },
+                            {
+                                id: 'cold-rolling',
+                                name: 'Cold Rolling',
+                                color: 'green',
+                                gateType: 'and',
+                                children: [
+                                    { id: 'tension-leveling', name: 'Tension Leveling', color: 'green' },
+                                    { id: 'reduction-rolling', name: 'Reduction Rolling', color: 'green' }
+                                ]
+                            },
+                            {
+                                id: 'galvanizing',
+                                name: 'Galvanizing',
+                                color: 'green',
+                                gateType: 'and',
+                                children: [
+                                    { id: 'zinc-coating', name: 'Zinc Coating', color: 'green' },
+                                    { id: 'air-knife', name: 'Air Knife', color: 'green' },
+                                    { id: 'final-cooling', name: 'Final Cooling', color: 'green' }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'sizing',
+                        name: 'Sizing',
+                        color: 'green',
+                        location: { lat: 33.7290, lng: -84.3680 },
+                        gateType: 'and',
+                        children: [
+                            { id: 'measuring', name: 'Measuring', color: 'green' },
+                            { id: 'trimming', name: 'Trimming', color: 'green' },
+                            { id: 'final-inspection', name: 'Final Inspection', color: 'green' }
+                        ]
+                    }
+                ]
+            };
+
+        let navigationStack = [];
+        let currentLevel = null;
+        let statusChart;
+
+        function calculateEffectiveColor(process) {
+            if (!process.children || process.children.length === 0) {
+                return process.color;
+            }
+
+            const childColors = process.children.map(child => calculateEffectiveColor(child));
+
+            if (process.gateType === 'and') {
+                return childColors.every(c => c === 'green') ? 'green' : 'red';
+            } else if (process.gateType === 'or') {
+                return childColors.every(c => c === 'red') ? 'red' : 'green';
+            }
+
+            return process.color;
+        }
+
+        function countProcesses(processes) {
+            let total = 0, healthy = 0, alerts = 0;
+
+            function count(proc) {
+                total++;
+                const color = calculateEffectiveColor(proc);
+                if (color === 'green') healthy++;
+                else alerts++;
+
+                if (proc.children) {
+                    proc.children.forEach(count);
+                }
+            }
+
+            processes.forEach(count);
+            return { total, healthy, alerts };
+        }
+
+        function updateStats() {
+            const stats = countProcesses(processData.tier0);
+            const efficiency = Math.round((stats.healthy / stats.total) * 100);
+
+            document.querySelector('#healthyCount .stat-value').textContent = stats.healthy;
+            document.querySelector('#alertCount .stat-value').textContent = stats.alerts;
+            document.querySelector('#totalCount .stat-value').textContent = stats.total;
+            document.querySelector('#efficiency .stat-value').textContent = efficiency + '%';
+
+            return stats;
+        }
+
+        function updateChart(stats) {
+            if (statusChart) statusChart.destroy();
+
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Healthy', 'Alerts'],
+                    datasets: [{
+                        data: [stats.healthy, stats.alerts],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAlerts() {
+            const alertsContainer = document.getElementById('alerts');
+            alertsContainer.innerHTML = '';
+
+            const alerts = [];
+            function findAlerts(proc, path = []) {
+                const currentPath = [...path, proc.name];
+                if (calculateEffectiveColor(proc) === 'red') {
+                    alerts.push({
+                        name: proc.name,
+                        path: currentPath.join(' → ')
+                    });
+                }
+                if (proc.children) {
+                    proc.children.forEach(c => findAlerts(c, currentPath));
+                }
+            }
+
+            processData.tier0.forEach(p => findAlerts(p));
+
+            if (alerts.length === 0) {
+                alertsContainer.innerHTML = '<div style="color: #10b981; text-align: center; padding: 20px;">✅ All systems operational</div>';
+            } else {
+                alerts.slice(0, 5).forEach(alert => {
+                    const div = document.createElement('div');
+                    div.className = 'alert-item';
+                    div.innerHTML = `
+                        <div class="alert-title">⚠️ ${alert.name}</div>
+                        <div class="alert-time">${alert.path}</div>
+                    `;
+                    alertsContainer.appendChild(div);
+                });
+            }
+        }
+
+        function updateLocationList() {
+            const container = document.getElementById('locationList');
+            container.innerHTML = '';
+
+            const facilities = processData.tier0.filter(p => p.location);
+
+            if (facilities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">No facility locations configured</div>';
+                return;
+            }
+
+            facilities.forEach(facility => {
+                const color = calculateEffectiveColor(facility);
+                const div = document.createElement('div');
+                div.className = 'location-item';
+                div.innerHTML = `
+                    <div class="location-marker ${color}">
+                        📍
+                    </div>
+                    <div class="location-info">
+                        <div class="location-name">${facility.name}</div>
+                        <div class="location-coords">${facility.location.lat.toFixed(4)}, ${facility.location.lng.toFixed(4)}</div>
+                    </div>
+                    <div class="location-status ${color}">
+                        ${color === 'green' ? '✓ Operational' : '⚠ Alert'}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function navigateToLevel(processes, levelName = 'Root') {
+            currentLevel = { processes, name: levelName };
+            renderCurrentLevel();
+        }
+
+        function drillDown(process) {
+            if (process.children && process.children.length > 0) {
+                navigationStack.push(currentLevel);
+                navigateToLevel(process.children, process.name);
+            }
+        }
+
+        function goBack() {
+            if (navigationStack.length > 0) {
+                const previousLevel = navigationStack.pop();
+                currentLevel = previousLevel;
+                renderCurrentLevel();
+            }
+        }
+
+        function renderCurrentLevel() {
+            const navArea = document.getElementById('navigationArea');
+            const viewArea = document.getElementById('processView');
+            
+            navArea.innerHTML = '';
+            viewArea.innerHTML = '';
+
+            // Breadcrumb
+            const breadcrumb = document.createElement('div');
+            breadcrumb.className = 'breadcrumb';
+            
+            const rootCrumb = document.createElement('span');
+            rootCrumb.className = 'breadcrumb-item';
+            rootCrumb.textContent = '🏠 Root';
+            rootCrumb.onclick = () => {
+                navigationStack = [];
+                navigateToLevel(processData.tier0, 'Root');
+            };
+            breadcrumb.appendChild(rootCrumb);
+
+            navigationStack.forEach((level, index) => {
+                const sep = document.createElement('span');
+                sep.className = 'breadcrumb-separator';
+                sep.textContent = '›';
+                breadcrumb.appendChild(sep);
+
+                const crumb = document.createElement('span');
+                crumb.className = 'breadcrumb-item';
+                crumb.textContent = level.name;
+                crumb.onclick = () => {
+                    navigationStack = navigationStack.slice(0, index + 1);
+                    goBack();
+                };
+                breadcrumb.appendChild(crumb);
+            });
+
+            if (currentLevel.name !== 'Root') {
+                const sep = document.createElement('span');
+                sep.className = 'breadcrumb-separator';
+                sep.textContent = '›';
+                breadcrumb.appendChild(sep);
+
+                const activeCrumb = document.createElement('span');
+                activeCrumb.className = 'breadcrumb-item active';
+                activeCrumb.textContent = currentLevel.name;
+                breadcrumb.appendChild(activeCrumb);
+            }
+
+            navArea.appendChild(breadcrumb);
+
+            // Back button
+            if (navigationStack.length > 0) {
+                const backBtn = document.createElement('button');
+                backBtn.className = 'back-button';
+                backBtn.innerHTML = '⬅️ Back';
+                backBtn.onclick = goBack;
+                navArea.appendChild(backBtn);
+            }
+
+            // Current level header
+            const header = document.createElement('div');
+            header.className = 'current-level-header';
+            
+            const title = document.createElement('div');
+            title.className = 'current-level-title';
+            title.textContent = currentLevel.name;
+            header.appendChild(title);
+
+            // Show gate type if this level has a parent
+            if (navigationStack.length > 0) {
+                const parentLevel = navigationStack[navigationStack.length - 1];
+                const parentProcess = findProcessInLevel(parentLevel.processes, currentLevel.name);
+                if (parentProcess && parentProcess.gateType) {
+                    const gateBadge = document.createElement('div');
+                    gateBadge.className = `logic-gate-badge ${parentProcess.gateType}`;
+                    gateBadge.textContent = `${parentProcess.gateType.toUpperCase()} Gate`;
+                    header.appendChild(gateBadge);
+                }
+            }
+
+            viewArea.appendChild(header);
+
+            // Process grid
+            const grid = document.createElement('div');
+            grid.className = 'process-grid';
+
+            if (currentLevel.processes.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <div class="empty-state-icon">📦</div>
+                    <div>No processes at this level</div>
+                `;
+                viewArea.appendChild(emptyState);
+                return;
+            }
+
+            currentLevel.processes.forEach(process => {
+                const effectiveColor = calculateEffectiveColor(process);
+                const isPropagated = effectiveColor !== process.color;
+
+                const card = document.createElement('div');
+                card.className = `process-card ${effectiveColor}`;
+                if (isPropagated) {
+                    card.classList.add('propagated');
+                }
+
+                const content = document.createElement('div');
+                content.className = 'process-card-content';
+
+                const name = document.createElement('div');
+                name.className = 'process-card-name';
+                name.textContent = process.name;
+                content.appendChild(name);
+
+                if (process.children && process.children.length > 0) {
+                    const info = document.createElement('div');
+                    info.className = 'process-card-info';
+                    info.textContent = `${process.children.length} sub-process${process.children.length !== 1 ? 'es' : ''}`;
+                    content.appendChild(info);
+
+                    if (process.gateType) {
+                        const gateInfo = document.createElement('div');
+                        gateInfo.className = 'process-card-info';
+                        gateInfo.textContent = `${process.gateType.toUpperCase()} logic`;
+                        content.appendChild(gateInfo);
+                    }
+                }
+
+                const badge = document.createElement('div');
+                badge.className = 'process-card-badge';
+                badge.textContent = effectiveColor === 'green' ? '✓ Operational' : '⚠ Alert';
+                if (isPropagated) {
+                    badge.textContent += ' (Propagated)';
+                }
+                content.appendChild(badge);
+
+                card.appendChild(content);
+
+                if (process.children && process.children.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'has-children-indicator';
+                    indicator.textContent = '▶';
+                    card.appendChild(indicator);
+                }
+
+                card.onclick = () => drillDown(process);
+
+                grid.appendChild(card);
+            });
+
+            viewArea.appendChild(grid);
+        }
+
+        function findProcessInLevel(processes, name) {
+            return processes.find(p => p.name === name);
+        }
+
+        function refreshAll() {
+            const stats = updateStats();
+            updateChart(stats);
+            updateAlerts();
+            updateLocationList();
+            if (!currentLevel) {
+                navigateToLevel(processData.tier0, 'Root');
+            } else {
+                renderCurrentLevel();
+            }
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'supplyChainData') {
+                processData = JSON.parse(e.newValue);
+                navigationStack = [];
+                refreshAll();
+            }
+        });
+
+        setInterval(() => {
+            const stored = localStorage.getItem('supplyChainData');
+            if (stored) {
+                const newData = JSON.parse(stored);
+                if (JSON.stringify(newData) !== JSON.stringify(processData)) {
+                    processData = newData;
+                    navigationStack = [];
+                    refreshAll();
+                }
+            }
+        }, 1000);
+
+        window.addEventListener('load', () => {
+            navigateToLevel(processData.tier0, 'Root');
+            refreshAll();
+        });
+    </script>
+</body>
+</html>
